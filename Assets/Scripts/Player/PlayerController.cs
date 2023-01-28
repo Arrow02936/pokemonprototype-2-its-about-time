@@ -4,77 +4,35 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField]
-    private float maximumSpeed;
 
-    [SerializeField]
-    private float rotationSpeed;
+    private Vector3 PlayerMovementInput;
+    private Vector2 PlayerMouseInput;
+    private float xRot;
 
-    [SerializeField]
-    private float jumpSpeed;
+    [SerializeField] private Rigidbody PlayerBody;
+    [Space]
+    [SerializeField] private float Speed;
+    [SerializeField] private float Sensitivity;
 
-    [SerializeField]
-    private float jumpButtonGracePeriod;
-
-    [SerializeField]
-    private Transform cameraTransform;
-
-    private CharacterController characterController;
-    private float ySpeed;
-    private float originalStepOffset;
-    private float? lastGroundedTime;
-    private float? jumpButtonPressedTime;
-
-    // Start is called before the first frame update
     void Start()
     {
-        characterController = GetComponent<CharacterController>();
-        originalStepOffset = characterController.stepOffset;
+        Cursor.lockState = CursorLockMode.Locked;
     }
+
+
 
     // Update is called once per frame
     void Update()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        float verticalInput = Input.GetAxis("Vertical");
+        PlayerMovementInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
+        PlayerMouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 
-        Vector3 movementDirection = new Vector3(horizontalInput, 0, verticalInput);
-        float inputMagnitude = Mathf.Clamp01(movementDirection.magnitude);
-
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-        {
-            inputMagnitude /= 2;
-        }
-
-        float speed = inputMagnitude * maximumSpeed;
-        movementDirection = Quaternion.AngleAxis(cameraTransform.rotation.eulerAngles.y, Vector3.up) * movementDirection;
-        movementDirection.Normalize();
-
-        ySpeed += Physics.gravity.y * Time.deltaTime;
-
-        Vector3 velocity = movementDirection * speed;
-        velocity.y = ySpeed;
-
-        characterController.Move(velocity * Time.deltaTime);
-
-        if (movementDirection != Vector3.zero)
-        {
-            Quaternion toRotation = Quaternion.LookRotation(movementDirection, Vector3.up);
-
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
-        }
+        MovePlayer();
     }
 
-    private void OnApplicationFocus(bool focus)
+    private void MovePlayer()
     {
-        if (focus)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.None;
-        }
+        Vector3 MoveVector = transform.TransformDirection(PlayerMovementInput) * Speed;
+        PlayerBody.velocity = new Vector3(MoveVector.x, PlayerBody.velocity.y, MoveVector.z);
     }
 }
-
